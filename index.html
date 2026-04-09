@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Complaint System</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI';
+      background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+      color:white;
+      margin:0;
+    }
+
+    .container {
+      max-width:700px;
+      margin:40px auto;
+      padding:20px;
+    }
+
+    .header {
+      text-align:center;
+      font-size:32px;
+      margin-bottom:30px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(12px);
+      padding:25px;
+      margin-bottom:25px;
+      border-radius:20px;
+      box-shadow:0 8px 25px rgba(0,0,0,0.4);
+    }
+
+    h2 {
+      text-align:center;
+      margin-bottom:20px;
+    }
+
+    input, select, textarea {
+      width:100%;
+      padding:14px;
+      margin:10px 0;
+      border-radius:12px;
+      border:none;
+      outline:none;
+      font-size:14px;
+    }
+
+    input[type="file"] {
+      background:white;
+      color:black;
+      padding:10px;
+    }
+
+    button {
+      width:100%;
+      padding:12px;
+      border:none;
+      border-radius:12px;
+      cursor:pointer;
+      background: linear-gradient(45deg,#00c6ff,#0072ff);
+      color:white;
+      font-weight:bold;
+      font-size:15px;
+      margin-top:10px;
+    }
+
+    button:hover {
+      opacity:0.9;
+    }
+
+    .status {
+      display:inline-block;
+      padding:6px 12px;
+      border-radius:20px;
+      font-size:12px;
+      margin-top:10px;
+    }
+
+    .pending { background:#ff4d4d; }
+    .resolved { background:#28a745; }
+
+    .complaint-card {
+      background: rgba(255,255,255,0.05);
+      padding:15px;
+      border-radius:15px;
+      margin-top:15px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">🚀 Smart Complaint System</div>
+
+  <div class="card">
+    <h2>Submit Complaint</h2>
+    <input id="name" placeholder="Your Name">
+    <textarea id="desc" placeholder="Describe issue"></textarea>
+    <select id="category">
+      <option>Road</option>
+      <option>Water</option>
+      <option>Electricity</option>
+    </select>
+    <input type="file" id="image">
+    <button onclick="submitComplaint()">Submit Complaint</button>
+  </div>
+
+  <div class="card">
+    <h2>Admin Dashboard</h2>
+    <div id="list"></div>
+  </div>
+</div>
+
+<script>
+function submitComplaint(){
+  let data = {
+    name: document.getElementById("name").value,
+    desc: document.getElementById("desc").value,
+    category: document.getElementById("category").value
+  };
+
+  fetch('http://localhost:3000/add', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(data)
+  })
+  .then(()=>{
+    alert("Complaint Submitted!");
+    display();
+  });
+}
+
+function display(){
+  fetch('http://localhost:3000/all')
+    .then(res=>res.json())
+    .then(data=>{
+      let list = document.getElementById("list");
+      list.innerHTML = "";
+
+      data.forEach((c,i)=>{
+        list.innerHTML += `
+          <div class="complaint-card">
+            <b>${c.name}</b>
+            <p>${c.desc}</p>
+            <small>${c.category}</small><br>
+            <span class="status ${c.status==='Pending'?'pending':'resolved'}">${c.status}</span>
+            <button onclick="toggleStatus(${i})">Mark Resolved</button>
+          </div>
+        `;
+      });
+    });
+}
+
+function toggleStatus(i){
+  fetch(`http://localhost:3000/update/${i}`, { method:'PUT' })
+  .then(()=>display());
+}
+
+setInterval(display,3000);
+
+display();
+</script>
+
+</body>
+</html>
